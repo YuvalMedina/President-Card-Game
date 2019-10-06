@@ -179,7 +179,7 @@ public class Main {
 			Player currentPlayer = leftStanding.get(playerNum);
 			
 			// if one of the computer-players starts:
-			if(playerNum != 0) {
+			if(currentPlayer != myPlayer) {
 				System.out.printf("%s's turn.\n", 
 						currentPlayer.getName());
 				
@@ -211,7 +211,8 @@ public class Main {
 						else {
 							System.out.printf("Everyone passed %s's "
 									+ "play. They get to start the next "
-									+ "play.\n", currentPlayer.getName());
+									+ "play.\n", 
+									leftStanding.get(playerNum).getName());
 						}
 					}
 					continue;
@@ -298,6 +299,9 @@ public class Main {
 				playerStandings.get(0).getName());
 		// Increment round count:
 		round++;
+		Player loser = leftStanding.get(0);
+		leftStanding.remove(loser);
+		playerStandings.add(loser);
 		
 		System.out.println("Do you want to continue to the next round? (yes/no)");
 		String token = scan.next();
@@ -312,8 +316,44 @@ public class Main {
 		}
 	}
 	
+	// The card-exchanges that happen after round1:
 	public static void exchangeCards() {
+		// President exchanges w/ beggar:
+		Player president = playerStandings.get(0);
+		Player beggar = playerStandings.get(players.length-1);
+		if(president == myPlayer) {
+			System.out.printf("Congratulations! As president you may "
+					+ "take %s's two best cards away\n",
+					beggar.getName());
+		}
+		beggar.giveNBestCards(president, 2);
 		
+		// Check to see if we have a vice-president:
+		if(players.length > 3) {
+			Player vicePres = playerStandings.get(1);
+			Player viceBeggar = playerStandings.get(players.length-2);
+			if(vicePres == myPlayer) {
+				System.out.printf("Congratulations! As vice-president "
+						+ "you may take %s's best card away\n",
+						viceBeggar.getName());
+			}
+			viceBeggar.giveNBestCards(vicePres, 1);
+		}
+	}
+	
+	// if our player is crowned president or vice-president,
+	// they get to choose the value of the card they want to take away.
+	public static Rank promptPlayerExchange() {
+		System.out.println(": 'Which value card do you want?'");
+		String token = scan.next();
+		while(true) {
+			try {
+				return deriveRank(token);
+			}
+			catch(IllegalArgumentException e) {
+				token = scan.next();
+			}
+		}
 	}
 	
 	// update the players's current standings
@@ -355,7 +395,10 @@ public class Main {
 			else {
 				Rank r = null;
 				try { r = deriveRank(token); }
-				catch(IllegalArgumentException e) {continue;}
+				catch(IllegalArgumentException e) {
+					token = scan.next();
+					continue;
+				}
 				
 				Card ret = null;
 				try {
@@ -390,7 +433,10 @@ public class Main {
 						try {
 							r = deriveRank(token);
 						}
-						catch(IllegalArgumentException e) { continue;}
+						catch(IllegalArgumentException e) {
+							token = scan.next();
+							continue;
+						}
 						
 						ret = new Card(r, Suit.DIAMONDS);
 						break;

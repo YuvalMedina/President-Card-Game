@@ -66,4 +66,53 @@ public class ComputerPlayer implements Player{
 		return this.name;
 	}
 
+	public void giveNBestCards(Player takes, int n) {
+		// If the Real-Player is taking our cards, we need
+		// to ask them which cards they would like:
+		if(takes.getClass() == RealPlayer.class) {
+			for(int i = 0; i < n; i++) {
+				System.out.print(this.name);
+				Rank r = Main.promptPlayerExchange();
+				Card toGive = new Card(r, Suit.CLUBS);
+				
+				int rem = this.indexOf(toGive);
+				if(rem == -1) {
+					System.out.printf("Sorry, %s does not have any "
+							+ "cards of that rank.\n",
+							this.name);
+					i--;
+					continue;
+				}
+				
+				takes.deal(myCards.remove(rem));
+			}
+		}
+		// Otherwise, give away our n best cards, by highest rank.
+		for(int i = 0; i < n; i++) {
+			Rank[] ranks = Rank.values();
+			// Start at the highest rank.
+			for(int j = ranks.length-1; j >= 0; j--) {
+				Card toGive = new Card(ranks[j], Suit.CLUBS);
+				int rem = this.indexOf(toGive);
+				if(rem == -1) {
+					continue;
+				}
+				
+				takes.deal(myCards.remove(rem));
+				break;
+			}
+		}
+	}
+	
+	protected int indexOf(Card c) {
+		for(int i = 0; i < myCards.size(); i++) {
+			if(myCards.get(i).compareTo(c) == 0) {
+				return i;
+			}
+			if(myCards.get(i).compareTo(c) > 0) {
+				return -1;
+			}
+		}
+		return -1;
+	}
 }

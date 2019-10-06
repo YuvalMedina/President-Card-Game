@@ -6,7 +6,7 @@ public interface Player {
 	boolean has3Clubs();
 	boolean hasWon();
 	String getName();
-	
+	void giveNBestCards(Player takes, int n);
 }
 
 class CardNotFoundException extends Exception{
