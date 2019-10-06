@@ -1,3 +1,8 @@
+/*
+ * Author: Yuval Medina
+ * 10/06/19
+ */
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -6,6 +11,8 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
+	
+	static final File GAME_RULES = new File("Game_Rules");
 	
 	// The smallest valued card:
 	static final Card BASE = new Card(Rank.THREE, Suit.CLUBS);
@@ -107,7 +114,7 @@ public class Main {
 			String token = scan.next();
 			if(token.equals("help")) {
 				try {
-					Scanner reader = new Scanner(new File("Game_Rules.txt"));
+					Scanner reader = new Scanner(GAME_RULES);
 					while(reader.hasNext()) {
 						System.out.println(reader.nextLine());
 					}
@@ -148,24 +155,24 @@ public class Main {
 		if(round == 1) {
 			starts = get3ClubsPlayer();
 		}
-		else {
-			try {
-				starts = getIndexOf(playerStandings.get(0));
-			} catch (Exception e) {
-				System.out.println("Total error. Winning player from last round not found.");
-			}
-		}
 		
 		// If we are past round 1, the President gets to take the
 		// beggar's best two cards, the vice-president the vice-
 		// beggar's one best card.
-		if(round != 1) exchangeCards();
+		if(round > 1) {
+			exchangeCards();
+			// Add all players to leftStanding, by order of their
+			// social standing:
+			leftStanding.addAll(playerStandings);
+		}
+		else {
+			// Add all players, as initially ordered, to leftStanding.
+			leftStanding.clear();
+			for(Player p : players) leftStanding.add(p);
+		}
 		
 		// Reset playerStandings from last round:
 		playerStandings.clear();
-		// Add all players to leftStanding:
-		leftStanding.clear();
-		for(Player p : players) leftStanding.add(p);
 		
 		// which player is playing:
 		int playerNum = starts;
