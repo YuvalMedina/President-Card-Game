@@ -7,8 +7,15 @@ public interface Player {
 	boolean hasWon();
 	String getName();
 	void giveNBestCards(Player takes, int n);
+	Card giveWorstCard();
+	int indexOf(Card c);
 }
 
 class CardNotFoundException extends Exception{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	
 }

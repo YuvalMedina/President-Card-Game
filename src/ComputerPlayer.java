@@ -85,7 +85,11 @@ public class ComputerPlayer implements Player{
 				}
 				
 				takes.deal(myCards.remove(rem));
+				
+				Card worst = takes.giveWorstCard();
+				this.deal(worst);
 			}
+			return;
 		}
 		// Otherwise, give away our n best cards, by highest rank.
 		for(int i = 0; i < n; i++) {
@@ -99,12 +103,20 @@ public class ComputerPlayer implements Player{
 				}
 				
 				takes.deal(myCards.remove(rem));
+				
+				Card worst = takes.giveWorstCard();
+				this.deal(worst);
 				break;
 			}
 		}
 	}
 	
-	protected int indexOf(Card c) {
+	public Card giveWorstCard() {
+		if(myCards.isEmpty()) return null;
+		return myCards.get(0);
+	}
+	
+	public int indexOf(Card c) {
 		for(int i = 0; i < myCards.size(); i++) {
 			if(myCards.get(i).compareTo(c) == 0) {
 				return i;

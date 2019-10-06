@@ -78,18 +78,37 @@ public class RealPlayer implements Player{
 				
 				toGive = myCards.remove(rem);
 				takes.deal(toGive);
-				System.out.printf("%s takes your %s.\n",
-						takes.getName(), toGive.toString());
-				try { TimeUnit.MILLISECONDS.sleep(600); }
-				catch (InterruptedException e) { System.out.println("Timer interrupted."); }
+				Card worst = takes.giveWorstCard();
+				this.deal(worst);
 				
+				System.out.printf("~~~%s takes your %s.~~~~ :(\n",
+						takes.getName(), toGive.toString());
+				System.out.printf("You get back %s from %s\n", 
+						worst.toString(), takes.getName());
+				try { TimeUnit.MILLISECONDS.sleep(700); }
+				catch (InterruptedException e) { System.out.println("Timer interrupted."); }
 				
 				break;
 			}
 		}
 	}
 	
-	protected int indexOf(Card c) {
+	public Card giveWorstCard() {
+		while(true) {
+			Rank r = Main.promptPlayerForWorstCard();
+			Card worst = new Card(r, Suit.CLUBS);
+			
+			int rem = this.indexOf(worst);
+			if(rem == -1) {
+				System.out.println("You don't have any cards of that rank.");
+				continue;
+			}
+			
+			return myCards.remove(rem);
+		}
+	}
+	
+	public int indexOf(Card c) {
 		for(int i = 0; i < myCards.size(); i++) {
 			if(myCards.get(i).compareTo(c) == 0) {
 				return i;

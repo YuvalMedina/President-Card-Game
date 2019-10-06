@@ -356,6 +356,37 @@ public class Main {
 		}
 	}
 	
+	// if our player is crowned president or vice-president,
+	// they'll also need to pick the worst cards to give back to the
+	// beggar / vice-beggar
+	public static Rank promptPlayerForWorstCard() {
+		System.out.println("Please enter any card you wish to give to ");
+		System.out.println("the beggar/vice-beggar in exchange for their ");
+		System.out.println("best card.");
+		System.out.println("Type 'peek' to take a look at your current hand.");
+		
+		String token = scan.next();
+		while(true) {
+			
+			if(token.equals("peek")) {
+				myPlayer.displayCards();
+				token = scan.next();
+				continue;
+			}
+			
+			else {
+				Rank r = null;
+				try { r = deriveRank(token); }
+				catch(IllegalArgumentException e) {
+					token = scan.next();
+					continue;
+				}
+				
+				return r;
+			}
+		}
+	}
+	
 	// update the players's current standings
 	// if they won, remove player from leftStanding and add them
 	// to playerStandings.
@@ -434,6 +465,12 @@ public class Main {
 							r = deriveRank(token);
 						}
 						catch(IllegalArgumentException e) {
+							token = scan.next();
+							continue;
+						}
+						if(r == Rank.TWO || r == Rank.JOKER) {
+							System.out.println("You may only assign Ranks "
+									+ "3 through Ace to your wild-card.");
 							token = scan.next();
 							continue;
 						}
@@ -516,5 +553,10 @@ public class Main {
 }
 
 class IllegalPlayException extends Exception{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	
 }
