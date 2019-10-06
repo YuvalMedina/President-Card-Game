@@ -156,6 +156,11 @@ public class Main {
 			}
 		}
 		
+		// If we are past round 1, the President gets to take the
+		// beggar's best two cards, the vice-president the vice-
+		// beggar's one best card.
+		if(round != 1) exchangeCards();
+		
 		// Reset playerStandings from last round:
 		playerStandings.clear();
 		// Add all players to leftStanding:
@@ -307,9 +312,17 @@ public class Main {
 		}
 	}
 	
+	public static void exchangeCards() {
+		
+	}
+	
+	// update the players's current standings
+	// if they won, remove player from leftStanding and add them
+	// to playerStandings.
 	public static boolean updateStanding(Player p) {
 		if(p.hasWon()) {
 			playerStandings.add(p);
+			leftStanding.remove(p);
 			System.out.printf("%s has run out of cards and is crowned %s.\n",
 					p.getName(),
 					playerNames.get(playerStandings.indexOf(p)));
