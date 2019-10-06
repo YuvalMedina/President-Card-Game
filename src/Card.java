@@ -40,25 +40,23 @@ public class Card implements Comparable<Card>{
 	
 	@Override
 	public String toString() {
-		if(this.r.value == 50) {
-			return "Joker";
-		}
 		
 		String ret = "";
 		switch(this.r) {
-		case TWO : ret += "Two";
-		case THREE : ret += "Three";
-		case FOUR : ret += "Four";
-		case FIVE : ret += "Five";
-		case SIX : ret += "Six";
-		case SEVEN : ret += "Seven";
-		case EIGHT : ret += "Eight";
-		case NINE : ret += "Nine";
-		case TEN : ret += "Ten";
-		case JACK : ret += "Jack";
-		case QUEEN : ret += "Queen";
-		case KING : ret += "King";
-		case ACE : ret += "Ace";
+		case TWO : ret += "Two"; break;
+		case THREE : ret += "Three"; break;
+		case FOUR : ret += "Four"; break;
+		case FIVE : ret += "Five"; break;
+		case SIX : ret += "Six"; break;
+		case SEVEN : ret += "Seven"; break;
+		case EIGHT : ret += "Eight"; break;
+		case NINE : ret += "Nine"; break;
+		case TEN : ret += "Ten"; break;
+		case JACK : ret += "Jack"; break;
+		case QUEEN : ret += "Queen"; break;
+		case KING : ret += "King"; break;
+		case ACE : ret += "Ace"; break;
+		case JOKER : return "Joker";
 		}
 		
 		if(this.s.equals(Suit.CLUBS)) ret += " of Clubs";

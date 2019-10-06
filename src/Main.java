@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 	
 	// The smallest valued card:
-	static final Card base = new Card(Rank.THREE, Suit.CLUBS);
+	static final Card BASE = new Card(Rank.THREE, Suit.CLUBS);
 	
 	static int round = 1;
 	// Map, mapping player positions to their names, aka:
@@ -21,14 +21,21 @@ public class Main {
 	static String[] hierarchy = {"President", "Vice-President", 
 			"Secretary", "Citizen", "Peasant", "Vice-Beggar", "Beggar"};
 	
-	// This list maps, by index since they will be added in order as
-	// they win,  the players to their standing in this round.
+	// playerStandings lists all the players by order of their win's,
+	// since they will be added in order, by 'updateStandings()' as 
+	// they win
 	static List<Player> playerStandings = new ArrayList<Player>();
+	
+	// lists all the players who are still in the game.
+	// players are removed by 'updateStandings()' as well
+	static List<Player> leftStanding = new ArrayList<Player>();
 	
 	// Array of all the players
 	static Player[] players = null;
 	// Our player.
 	static RealPlayer myPlayer = null;
+	
+	static Scanner scan = new Scanner(System.in);
 
 	public static void main(String[] args) {
 		System.out.println("Welcome to President");
@@ -36,14 +43,11 @@ public class Main {
 		System.out.print("Otherwise, begin by entering the ");
 		System.out.println("number of players you wish to compete against.");
 		
-		Scanner scan = new Scanner(System.in);
-		Player[] players = null;
-		RealPlayer myPlayer = null;
-		while(scan.hasNext()) {
+		while(true) {
 			if(scan.hasNextInt()) {
 				int n = scan.nextInt();
-				if(n < 3 || n > 7) {
-					System.out.println("Please enter a number between 3 and 7 players.");
+				if(n < 2 || n > 6) {
+					System.out.println("Please enter a number between 2 and 6 players.");
 					continue;
 				}
 				//else:
@@ -55,6 +59,8 @@ public class Main {
 				}
 				
 				// Initialize players[] array, and myPlayer:
+				// n+1 long, consisting of n auto-players and 1 real-player
+				n = n + 1;
 				players = new Player[n];
 				myPlayer = new RealPlayer(name);
 				players[0] = myPlayer;
@@ -67,34 +73,39 @@ public class Main {
 				switch(n) {
 				case 3: {
 					playerNames.add(hierarchy[3]);
+					break;
 				}
 				case 4: {
 					playerNames.add(hierarchy[1]);
 					playerNames.add(hierarchy[5]);
+					break;
 				}
 				case 5: {
 					playerNames.add(hierarchy[1]);
 					playerNames.add(hierarchy[3]);
 					playerNames.add(hierarchy[5]);
+					break;
 				}
 				case 6: {
 					playerNames.add(hierarchy[1]);
 					playerNames.add(hierarchy[3]);
 					playerNames.add(hierarchy[3]);
 					playerNames.add(hierarchy[5]);
+					break;
 				}
 				case 7: {
 					for(int i = 1; i < 6; i++) {
 						playerNames.add(hierarchy[i]);
 					}
+					break;
 				}
 				}
 				playerNames.add(hierarchy[6]);
 				break;
 			}
 			
-			String input = scan.next();
-			if(input.equals("help")) {
+			String token = scan.next();
+			if(token.equals("help")) {
 				try {
 					Scanner reader = new Scanner(new File("Game_Rules.txt"));
 					while(reader.hasNext()) {
@@ -109,11 +120,19 @@ public class Main {
 		}
 		
 		System.out.println("Type 'start' to begin game");
-		while(scan.hasNext("start")) {
-			if(!startRound()) {
-				break;
+		String token = scan.next();
+		while(true) {
+			if(token.equals("start")) {
+				if(!startRound()) {
+					break;
+				}
+				System.out.println("Type 'start' to begin game");
+				token = scan.next();
+				continue;
 			}
 		}
+		scan.close();
+		return;
 	}
 	
 	// Returns true if, at the close of thise round, the player
@@ -122,7 +141,7 @@ public class Main {
 		Deck myDeck = new Deck();
 		myDeck.deal(players);
 		
-		System.out.printf("Round %i begins! Here are the cards you were dealt:\n", round);
+		System.out.printf("Round %d begins!\n", round);
 		myPlayer.displayCards();
 		
 		int starts = 0;
@@ -139,157 +158,234 @@ public class Main {
 		
 		// Reset playerStandings from last round:
 		playerStandings.clear();
+		// Add all players to leftStanding:
+		leftStanding.clear();
+		for(Player p : players) leftStanding.add(p);
+		
 		// which player is playing:
 		int playerNum = starts;
 		// start at smallest valued card:
-		Card currentCard = base;
+		Card currentCard = BASE;
 		// set number of players that have passed to 0:
 		int passed = 0;
 		
-		while(!roundOver()) {
+		while(leftStanding.size() >= 2) {
 			
-			// checks if this player has already won (lost his hand):
-			if(players[playerNum].hasWon()) continue;
+			Player currentPlayer = leftStanding.get(playerNum);
 			
 			// if one of the computer-players starts:
 			if(playerNum != 0) {
-				System.out.printf("%s's turn.\n", players[playerNum].getName());
+				System.out.printf("%s's turn.\n", 
+						currentPlayer.getName());
 				
 				// set a timer in between computer plays, so that
 				// they're not overly rapid
-				try { TimeUnit.MILLISECONDS.sleep(200);}
+				try { TimeUnit.MILLISECONDS.sleep(700);}
 				catch (InterruptedException e1) { System.out.println("Timer was interrupted."); }
 				
 				
 				try {
-					currentCard = players[playerNum].play(currentCard);
+					currentCard = currentPlayer.play(currentCard);
 				}
 				catch(CardNotFoundException e) {
 					// We couldn't find a card that's of a bigger rank in our hand
 					// so we pass:
-					System.out.printf("%s has passed", players[playerNum].getName());
+					System.out.printf("%s has passed\n", 
+							currentPlayer.getName());
 					passed++;
-					playerNum = (playerNum + 1) % players.length;
+					playerNum = (playerNum + 1) % leftStanding.size();
 					if(passed >= players.length - 1) {
-						currentCard = base;
+						currentCard = BASE;
 						// Was it myPlayer's play that caused everyone to pass?
 						// If so let's congratulate them personally!
 						if(playerNum == 0) {
-							System.out.println("Everyone passed your play! You get to start the next play.");
+							System.out.println("Everyone passed your "
+									+ "play! You get to start the next "
+									+ "play.");
 						}
 						else {
-							System.out.printf("Everyone passed %s's play. They get to start the next play.\n", players[playerNum].getName());
+							System.out.printf("Everyone passed %s's "
+									+ "play. They get to start the next "
+									+ "play.\n", currentPlayer.getName());
 						}
 					}
 					continue;
 				}
 				
 				// if Computer has not passed, it plays:
-				System.out.printf("%s has played %s\n", players[playerNum].getName(), currentCard.toString());
+				System.out.printf("%s has played %s\n", 
+						currentPlayer.getName(), currentCard.toString());
+				
+				// checks if 'two' was played. If so, the current play is burned,
+				// and the player gets to start the next play.
 				if(currentCard.getRank().equals(Rank.TWO)) {
 					System.out.println("The current stack of cards is ~burned~!");
-					currentCard = base;
+					currentCard = BASE;
+					// reset passed count:
+					passed = 0;
+					// checks if the computer has won, if it has, 
+					// print prompt, and return true
+					if(updateStanding(currentPlayer)) {
+						playerNum = playerNum % leftStanding.size();
+					}
+					continue;
 				}
-				
-				// checks if the computer has won, if it has, print prompt:
-				updateStanding(players[playerNum]);
-				
-				playerNum = (playerNum + 1) % players.length;
-				// reset passed count:
-				passed = 0;
-				continue;
+				else {
+					// checks if the computer has won, if it has, 
+					// print prompt, and return true
+					if(!updateStanding(currentPlayer)) {
+						// increment playerNum:
+						playerNum = (playerNum + 1) % leftStanding.size();
+					}
+					else playerNum = playerNum % leftStanding.size();
+					// reset passed count:
+					passed = 0;
+					continue;
+				}
 			}
+			// Real player's (myPlayer's) turn:
 			else {
-				Card c = promptRealPlayer();
+				Card c = promptRealPlayer(currentCard);
 				// myPlayer has passed their turn:
 				if(c == null) {
 					System.out.println("You passed.");
-					playerNum = (playerNum + 1) % players.length;
+					playerNum = (playerNum + 1) % leftStanding.size();
 					passed++;
-					if(passed >= players.length - 1) {
-						currentCard = base;
-						System.out.printf("Everyone passed %s's play. They get to start the next play.\n", players[playerNum].getName());
+					if(passed >= leftStanding.size() - 1) {
+						currentCard = BASE;
+						System.out.printf("Everyone passed %s's play. "
+								+ "They get to start the next play.\n", 
+								leftStanding.get(playerNum).getName());
 					}
 					continue;
 				}
 				// else:
 				currentCard = c;
-				System.out.printf("You played %s. Your current hand:\n", currentCard.toString());
+				System.out.printf("You played %s.\n", 
+						currentCard.toString());
 				if(currentCard.getRank().equals(Rank.TWO)) {
 					System.out.println("The current stack of cards is ~burned~!");
-					currentCard = base;
+					// reset currentCard:
+					currentCard = BASE;
+					// playerNum stays the same, that is we begin next play.
+					// unless we won:
+					if(updateStanding(myPlayer)) {
+						playerNum = playerNum % leftStanding.size();
+					}
 				}
+				else {
+					if(updateStanding(myPlayer)) {
+						playerNum = playerNum % leftStanding.size();
+					}
+					else playerNum = (playerNum + 1) % leftStanding.size();
+				}
+				
 				// reset passed count:
 				passed = 0;
-				playerNum = (playerNum + 1) % players.length;
-				myPlayer.displayCards();
+				
+				try { TimeUnit.MILLISECONDS.sleep(500);}
+				catch (InterruptedException e1) { System.out.println("Timer was interrupted."); }
 			}
 		}
 		
-		// Round is over! Let's see if we want to continue to the next game.
+		// Round is over!
 		System.out.printf("The round is over and %s is crowned President.\n",
 				playerStandings.get(0).getName());
-		System.out.println("Do you want to continue to the next round?");
-		Scanner scan = new Scanner(System.in);
-		while(scan.hasNext()) {
-			if(scan.next() == "yes") {
+		// Increment round count:
+		round++;
+		
+		System.out.println("Do you want to continue to the next round? (yes/no)");
+		String token = scan.next();
+		while(true) {
+			if(token.equals("yes")) {
 				return true;
 			}
-			else if(scan.next() == "no") {
+			else if(token.equals("no")) {
 				return false;
 			}
+			token = scan.next();
 		}
-		
+	}
+	
+	public static boolean updateStanding(Player p) {
+		if(p.hasWon()) {
+			playerStandings.add(p);
+			System.out.printf("%s has run out of cards and is crowned %s.\n",
+					p.getName(),
+					playerNames.get(playerStandings.indexOf(p)));
+			return true;
+		}
 		return false;
 	}
 	
-	public static void updateStanding(Player p) {
-		if(p.hasWon()) {
-			playerStandings.add(p);
-			System.out.printf("%s has run out of cards and is crowned %s",
-					p.getName(),
-					playerNames.get(playerStandings.indexOf(p)));
-		}
-	}
-	
-	public static Card promptRealPlayer() {
+	public static Card promptRealPlayer(Card currentCard) {
 		System.out.println("It's your turn!");
-		System.out.print("Please enter the value (rank) of the card you wish to play. ");
-		System.out.print("You may use any format (alphabetic or numeric). Type 'peek' ");
+		System.out.println("Please enter the value (rank) of the card you wish to play.");
+		System.out.println("You may use any format (alphabetic or numeric). Type 'peek' ");
 		System.out.println("to take a look at your current hand.");
-		System.out.println("If you wish to pass, type 'pass'");
+		System.out.println("If you wish to pass, type 'pass'.");
 		
-		Scanner scan = new Scanner(System.in);
-		while(scan.hasNext()) {
-			String token = scan.next();
+		Card toPlay = null;
+		String token = scan.next();
+		while(true) {
+			
 			if(token.equals("peek")) {
 				myPlayer.displayCards();
+				token = scan.next();
 				continue;
 			}
+			
 			if(token.equals("pass")) {
 				return null;
 			}
+			
 			else {
 				Rank r = null;
-				try {
-					r = deriveRank(token);
-				}
+				try { r = deriveRank(token); }
 				catch(IllegalArgumentException e) {continue;}
 				
+				Card ret = null;
 				try {
-					return myPlayer.play(new Card(r, Suit.SPADES));
+					toPlay = new Card(r, Suit.CLUBS);
+					if(currentCard.compareTo(toPlay) > 0) {
+						throw(new IllegalPlayException());
+					}
+					// else:
+					ret = myPlayer.play(toPlay);
 				}
 				catch(CardNotFoundException e) {
 					System.out.println("A card of this rank was not found in your hand.");
 					System.out.println("If you want to take a look at your current hand, type 'peek'.");
+					token = scan.next();
 					continue;
 				}
+				catch(IllegalPlayException e) {
+					System.out.printf("You must play a card equal to "
+							+ "or higher in rank than %s\n", currentCard.toString());
+					System.out.println("If you can't, type 'pass'.");
+					token = scan.next();
+					continue;
+				}
+				
+				// If we play a joker, we have to assign a value to it
+				// (wild-card situation).
+				if(ret.getRank() == Rank.JOKER) {
+					System.out.println("What value (Rank) would you like to "
+							+ "assign to your Joker (wild-card)?");
+					while(true) {
+						token = scan.next();
+						try {
+							r = deriveRank(token);
+						}
+						catch(IllegalArgumentException e) { continue;}
+						
+						ret = new Card(r, Suit.DIAMONDS);
+						break;
+					}
+				}
+				return ret;
 			}
 		}
-		scan.close();
-		
-		// assert, should not reach this point.
-		return null;
 	}
 	
 	public static Rank deriveRank(String token) throws IllegalArgumentException {
@@ -335,18 +431,6 @@ public class Main {
 		}
 	}
 	
-	// Checks if roundOver. Round is over if only one player has cards.
-	public static boolean roundOver() {
-		int leftStanding = 0;
-		for(int i = 0; i < players.length; i++) {
-			if(!players[i].hasWon()) {
-				leftStanding++;
-			}
-		}
-		
-		return leftStanding < 2;
-	}
-	
 	// Gets the player who has 3 of clubs
 	public static int get3ClubsPlayer() {
 		// assert from beginning, 3 of Clubs is the first card
@@ -370,4 +454,8 @@ public class Main {
 		
 		throw(new Exception());
 	}
+}
+
+class IllegalPlayException extends Exception{
+	
 }

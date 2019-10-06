@@ -7,7 +7,7 @@ public class ComputerPlayer implements Player{
 	private List<Card> myCards = new ArrayList<Card>();
 	
 	public ComputerPlayer(int i) {
-		name = "Auot-Player " + i;
+		name = "Auto-Player " + i;
 	}
 
 	@Override
@@ -15,7 +15,7 @@ public class ComputerPlayer implements Player{
 	// assert that myCards is always sorted correctly.
 	public void deal(Card c) {
 		for(int i = 0; i < myCards.size(); i++) {
-			if(c.compareTo(myCards.get(i)) > 0) {
+			if(c.compareTo(myCards.get(i)) < 0) {
 				myCards.add(i, c);
 				return;
 			}
@@ -48,7 +48,7 @@ public class ComputerPlayer implements Player{
 	public boolean has3Clubs() {
 		Card threeClubs = new Card(Rank.THREE, Suit.CLUBS);
 		
-		if(myCards.get(0).equals(threeClubs)) {
+		if(myCards.get(0).compareTo(threeClubs) == 0) {
 			return true;
 		}
 		
