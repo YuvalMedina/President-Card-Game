@@ -178,8 +178,15 @@ public class Main {
 		int playerNum = starts;
 		// start at smallest valued card:
 		Card currentCard = BASE;
-		// set number of players that have passed to 0:
-		int passed = 0;
+		// the index of the player who gets to start the play,
+		// if everyone passes. (can differ, b/c if the last person
+		// who actually played won, it's the next person who starts)
+		int passedIndex = playerNum;
+		// the actual last player to play:
+		Player lastToPlay = leftStanding.get(0);
+		// was the person that won (and is thus out of the game)
+		// the last person to not pass?
+		boolean situation = false;
 		
 		while(leftStanding.size() >= 2) {
 			
@@ -200,59 +207,71 @@ public class Main {
 					currentCard = currentPlayer.play(currentCard);
 				}
 				catch(CardNotFoundException e) {
-					// We couldn't find a card that's of a bigger rank in our hand
-					// so we pass:
+					// We couldn't find a card that's of a bigger
+					// rank in our hand so we pass:
 					System.out.printf("%s has passed\n", 
 							currentPlayer.getName());
-					passed++;
 					playerNum = (playerNum + 1) % leftStanding.size();
-					if(passed >= players.length - 1) {
+					if(passedIndex == playerNum && !situation) {
 						currentCard = BASE;
 						// Was it myPlayer's play that caused everyone to pass?
 						// If so let's congratulate them personally!
-						if(playerNum == 0) {
-							System.out.println("Everyone passed your "
-									+ "play! You get to start the next "
-									+ "play.");
+						if(myPlayer == lastToPlay) {
+							System.out.println("Everyone passed your play!");
 						}
 						else {
-							System.out.printf("Everyone passed %s's "
-									+ "play. They get to start the next "
-									+ "play.\n", 
-									leftStanding.get(playerNum).getName());
+							System.out.printf("Everyone passed %s's play.\n", 
+									lastToPlay.getName());
 						}
 					}
+					situation = false;
 					continue;
 				}
 				
 				// if Computer has not passed, it plays:
 				System.out.printf("%s has played %s\n", 
 						currentPlayer.getName(), currentCard.toString());
+				lastToPlay = currentPlayer;
 				
 				// checks if 'two' was played. If so, the current play is burned,
-				// and the player gets to start the next play.
+				// and the same player gets to start the next play.
 				if(currentCard.getRank().equals(Rank.TWO)) {
 					System.out.println("The current stack of cards is ~burned~!");
 					currentCard = BASE;
-					// reset passed count:
-					passed = 0;
+					
 					// checks if the computer has won, if it has, 
-					// print prompt, and return true
+					// this 'same player' is gone from the game...
 					if(updateStanding(currentPlayer)) {
 						playerNum = playerNum % leftStanding.size();
+						// If the player won, and everyone passes
+						// their turn subsequently, the player who
+						// starts the next play is the next player:
+						passedIndex = playerNum;
+						situation = true;
+						continue;
 					}
+					passedIndex = playerNum;
+					situation = true;
 					continue;
 				}
 				else {
-					// checks if the computer has won, if it has, 
-					// print prompt, and return true
+					// checks if the computer has won
 					if(!updateStanding(currentPlayer)) {
+						// update passedIndex:
+						passedIndex = playerNum;
+						situation = false;
 						// increment playerNum:
 						playerNum = (playerNum + 1) % leftStanding.size();
 					}
-					else playerNum = playerNum % leftStanding.size();
-					// reset passed count:
-					passed = 0;
+					else {
+						playerNum = playerNum % leftStanding.size();
+						// If player won, the "last player who
+						// hasn't passed" is the next player, since
+						// they will start the play if everyone 
+						// subsequently passed:
+						passedIndex = playerNum;
+						situation = true;
+					}
 					continue;
 				}
 			}
@@ -263,19 +282,22 @@ public class Main {
 				if(c == null) {
 					System.out.println("You passed.");
 					playerNum = (playerNum + 1) % leftStanding.size();
-					passed++;
-					if(passed >= leftStanding.size() - 1) {
+					
+					if(playerNum == passedIndex && !situation) {
 						currentCard = BASE;
-						System.out.printf("Everyone passed %s's play. "
-								+ "They get to start the next play.\n", 
-								leftStanding.get(playerNum).getName());
+						System.out.printf("Everyone passed %s's play.\n", 
+								lastToPlay.getName());
 					}
+					situation = false;
 					continue;
 				}
+				
 				// else:
 				currentCard = c;
 				System.out.printf("You played %s.\n", 
 						currentCard.toString());
+				lastToPlay = myPlayer;
+				
 				if(currentCard.getRank().equals(Rank.TWO)) {
 					System.out.println("The current stack of cards is ~burned~!");
 					// reset currentCard:
@@ -285,16 +307,22 @@ public class Main {
 					if(updateStanding(myPlayer)) {
 						playerNum = playerNum % leftStanding.size();
 					}
+					passedIndex = playerNum;
+					situation = true;
+					continue;
 				}
 				else {
 					if(updateStanding(myPlayer)) {
 						playerNum = playerNum % leftStanding.size();
+						passedIndex = playerNum;
+						situation = true;
 					}
-					else playerNum = (playerNum + 1) % leftStanding.size();
+					else{
+						passedIndex = playerNum;
+						situation = false;
+						playerNum = (playerNum + 1) % leftStanding.size();
+					}
 				}
-				
-				// reset passed count:
-				passed = 0;
 				
 				try { TimeUnit.MILLISECONDS.sleep(500);}
 				catch (InterruptedException e1) { System.out.println("Timer was interrupted."); }
